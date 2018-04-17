@@ -25,4 +25,9 @@ public class TransactionService {
 	public Collection<TransactionDto> list() {
 		return transactions.values();
 	}
+
+	void cleanAll() {
+		transactions.clear();
+		ids.set(0);
+	}
 }
