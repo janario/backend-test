@@ -1,9 +1,6 @@
 package me.janario.transaction;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +9,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import me.janario.transaction.domain.TransactionDto;
+import me.janario.transaction.domain.TransactionResponseDto;
+import me.janario.transaction.domain.TransactionService;
+
 @RestController
 public class TransactionController {
-	private final AtomicInteger ids = new AtomicInteger();
-	private final Map<Integer, TransactionDto> transactions = new ConcurrentHashMap<>();
+
+	@Autowired
+	private TransactionService transactionService;
 
 	@PostMapping("/transactions")
 	public ResponseEntity<TransactionResponseDto> createTrasaction(@RequestBody TransactionDto dto) {
@@ -23,8 +25,7 @@ public class TransactionController {
 			return ResponseEntity.noContent().build();
 		}
 
-		int id;
-		transactions.put(id = ids.incrementAndGet(), dto);
+		int id = transactionService.register(dto);
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentContextPath()
 						.replacePath("/transaction/" + id).build().toUri())
@@ -33,7 +34,7 @@ public class TransactionController {
 
 	@GetMapping("/transaction/{id}")
 	public ResponseEntity<Object> transaction(@PathVariable Integer id) {
-		TransactionDto dto = transactions.get(id);
+		TransactionDto dto = transactionService.findById(id);
 		if (dto == null) {
 			return ResponseEntity.notFound().build();
 		}

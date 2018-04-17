@@ -28,43 +28,45 @@ public class TransactionsTests {
 	public void createTransaction() {
 		TransactionDto dto = new TransactionDto(new BigDecimal("10.1"), Instant.now());
 
-		ResponseEntity<TransactionResponseDto> response = restTemplate.postForEntity("/transactions", dto, TransactionResponseDto.class);
-		assertEquals(HttpStatus.CREATED, response.getStatusCode());
-		assertEquals(dto.getAmount(), response.getBody().getAmount());
-		assertEquals(dto.getTimestamp(), response.getBody().getTime());
-
-		TransactionDto created = restTemplate.getForObject(response.getHeaders().getLocation(), TransactionDto.class);
-		assertEquals(dto.getAmount(), created.getAmount());
-		assertEquals(dto.getTimestamp(), created.getTimestamp());
+		ResponseEntity<TransactionResponseDto> response = createAssertResponse(dto);
+		assertCreation(dto, response);
 	}
 
 	@Test
 	public void oldValidTransaction() {
 		TransactionDto dto = new TransactionDto(BigDecimal.TEN, Instant.now().minusSeconds(30));
 
-		ResponseEntity<TransactionResponseDto> response = restTemplate.postForEntity("/transactions", dto, TransactionResponseDto.class);
-		assertEquals(HttpStatus.CREATED, response.getStatusCode());
-		assertEquals(dto.getAmount(), response.getBody().getAmount());
-		assertEquals(dto.getTimestamp(), response.getBody().getTime());
-
-
-		TransactionDto created = restTemplate.getForObject(response.getHeaders().getLocation(), TransactionDto.class);
-		assertEquals(dto.getAmount(), created.getAmount());
-		assertEquals(dto.getTimestamp(), created.getTimestamp());
+		ResponseEntity<TransactionResponseDto> response = createAssertResponse(dto);
+		assertCreation(dto, response);
 	}
 
 	@Test
 	public void oldTransaction() {
 		TransactionDto dto = new TransactionDto(new BigDecimal("12.3"), Instant.now().minusSeconds(61));
-
-		ResponseEntity<String> response = restTemplate.postForEntity("/transactions", dto, String.class);
-		assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+		assertNoContent(dto);
 	}
 
 	@Test
 	public void exampleTest() {
 		TransactionDto dto = new TransactionDto(BigDecimal.ONE, Instant.ofEpochMilli(1478192204000L));
+		assertNoContent(dto);
+	}
 
+	private ResponseEntity<TransactionResponseDto> createAssertResponse(TransactionDto dto) {
+		ResponseEntity<TransactionResponseDto> response = restTemplate.postForEntity("/transactions", dto, TransactionResponseDto.class);
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
+		assertEquals(dto.getAmount(), response.getBody().getAmount());
+		assertEquals(dto.getTimestamp(), response.getBody().getTime());
+		return response;
+	}
+
+	private void assertCreation(TransactionDto dto, ResponseEntity<TransactionResponseDto> response) {
+		TransactionDto created = restTemplate.getForObject(response.getHeaders().getLocation(), TransactionDto.class);
+		assertEquals(dto.getAmount(), created.getAmount());
+		assertEquals(dto.getTimestamp(), created.getTimestamp());
+	}
+
+	private void assertNoContent(TransactionDto dto) {
 		ResponseEntity<String> response = restTemplate.postForEntity("/transactions", dto, String.class);
 		assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 	}
