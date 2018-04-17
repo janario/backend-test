@@ -1,4 +1,4 @@
-package me.janario.statistics;
+package me.janario.statistics.domain;
 
 import java.math.BigDecimal;
 

@@ -1,29 +1,31 @@
 package me.janario.transaction.domain;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import me.janario.statistics.domain.StatisticsService;
 
 @Service
 public class TransactionService {
-	private final AtomicInteger ids = new AtomicInteger();
-	private final Map<Integer, TransactionDto> transactions = new ConcurrentHashMap<>();
+	private final AtomicLong ids = new AtomicLong();
+	private final Map<Long, TransactionResponseDto> transactions = new ConcurrentHashMap<>();
 
-	public int register(TransactionDto dto) {
-		int id;
-		transactions.put(id = ids.incrementAndGet(), dto);
-		return id;
+	@Autowired
+	private StatisticsService statisticsService;
+
+	public TransactionResponseDto register(TransactionDto dto) {
+		TransactionResponseDto response = dto.toResponse(ids.incrementAndGet());
+		statisticsService.register(response);
+		transactions.put(response.getId(), response);
+		return response;
 	}
 
-	public TransactionDto findById(Integer id) {
+	public TransactionResponseDto findById(Long id) {
 		return transactions.get(id);
-	}
-
-	public Collection<TransactionDto> list() {
-		return transactions.values();
 	}
 
 	void cleanAll() {

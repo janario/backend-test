@@ -3,16 +3,25 @@ package me.janario.transaction.domain;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class TransactionResponseDto {
+	@JsonIgnore
+	private long id;
 	private BigDecimal amount;
 	private Instant time;
 
 	public TransactionResponseDto() {
 	}
 
-	public TransactionResponseDto(BigDecimal amount, Instant time) {
+	public TransactionResponseDto(long id, BigDecimal amount, Instant time) {
+		this.id = id;
 		this.amount = amount;
 		this.time = time;
+	}
+
+	public long getId() {
+		return id;
 	}
 
 	public BigDecimal getAmount() {
@@ -21,5 +30,9 @@ public class TransactionResponseDto {
 
 	public Instant getTime() {
 		return time;
+	}
+
+	public Instant expireOn() {
+		return time.plusSeconds(60);
 	}
 }

@@ -61,9 +61,9 @@ public class TransactionsTests {
 	}
 
 	private void assertCreation(TransactionDto dto, ResponseEntity<TransactionResponseDto> response) {
-		TransactionDto created = restTemplate.getForObject(response.getHeaders().getLocation(), TransactionDto.class);
+		TransactionResponseDto created = restTemplate.getForObject(response.getHeaders().getLocation(), TransactionResponseDto.class);
 		assertEquals(dto.getAmount(), created.getAmount());
-		assertEquals(dto.getTimestamp(), created.getTimestamp());
+		assertEquals(dto.getTimestamp(), created.getTime());
 	}
 
 	private void assertNoContent(TransactionDto dto) {

@@ -23,11 +23,7 @@ public class TransactionDto {
 		return timestamp;
 	}
 
-	public boolean isOlderThan60Seconds() {
-		return getTimestamp().isBefore(Instant.now().minusSeconds(60));
-	}
-
-	public TransactionResponseDto toResponse() {
-		return new TransactionResponseDto(getAmount(), getTimestamp());
+	public TransactionResponseDto toResponse(long id) {
+		return new TransactionResponseDto(id, getAmount(), getTimestamp());
 	}
 }

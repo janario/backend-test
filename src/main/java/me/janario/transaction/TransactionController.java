@@ -1,5 +1,7 @@
 package me.janario.transaction;
 
+import java.time.Instant;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,20 +23,20 @@ public class TransactionController {
 
 	@PostMapping("/transactions")
 	public ResponseEntity<TransactionResponseDto> createTrasaction(@RequestBody TransactionDto dto) {
-		if (dto.isOlderThan60Seconds()) {
+		if (dto.getTimestamp().isBefore(Instant.now().minusSeconds(60))) {
 			return ResponseEntity.noContent().build();
 		}
 
-		int id = transactionService.register(dto);
+		TransactionResponseDto response = transactionService.register(dto);
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentContextPath()
-						.replacePath("/transaction/" + id).build().toUri())
-				.body(dto.toResponse());
+						.replacePath("/transaction/" + response.getId()).build().toUri())
+				.body(response);
 	}
 
 	@GetMapping("/transaction/{id}")
-	public ResponseEntity<Object> transaction(@PathVariable Integer id) {
-		TransactionDto dto = transactionService.findById(id);
+	public ResponseEntity<TransactionResponseDto> transaction(@PathVariable Long id) {
+		TransactionResponseDto dto = transactionService.findById(id);
 		if (dto == null) {
 			return ResponseEntity.notFound().build();
 		}
