@@ -9,10 +9,10 @@ release.properties
 
 # Idea
 *.iml
-.idea
-#!.idea/codeStyles
-#!.idea/codeStyleSettings.xml
-#!.idea/encodings.xml
+**/.idea/*
+!.idea/codeStyles
+!.idea/codeStyleSettings.xml
+!.idea/encodings.xml
 
 .gradle
 build
