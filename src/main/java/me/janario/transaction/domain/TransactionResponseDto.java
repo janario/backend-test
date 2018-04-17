@@ -1,4 +1,4 @@
-package me.janario.statistics;
+package me.janario.transaction.domain;
 
 import java.math.BigDecimal;
 import java.time.Instant;

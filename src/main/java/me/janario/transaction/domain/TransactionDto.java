@@ -1,4 +1,4 @@
-package me.janario.statistics;
+package me.janario.transaction.domain;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -25,5 +25,9 @@ public class TransactionDto {
 
 	public boolean isOlderThan60Seconds() {
 		return getTimestamp().isBefore(Instant.now().minusSeconds(60));
+	}
+
+	public TransactionResponseDto toResponse() {
+		return new TransactionResponseDto(getAmount(), getTimestamp());
 	}
 }

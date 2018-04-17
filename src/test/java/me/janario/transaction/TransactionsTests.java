@@ -1,4 +1,4 @@
-package me.janario.statistics;
+package me.janario.transaction;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,6 +14,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import me.janario.transaction.domain.TransactionDto;
+import me.janario.transaction.domain.TransactionResponseDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
