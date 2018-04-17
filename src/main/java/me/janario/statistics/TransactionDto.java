@@ -22,4 +22,8 @@ public class TransactionDto {
 	public Instant getTimestamp() {
 		return timestamp;
 	}
+
+	public boolean isOlderThan60Seconds() {
+		return getTimestamp().isBefore(Instant.now().minusSeconds(60));
+	}
 }

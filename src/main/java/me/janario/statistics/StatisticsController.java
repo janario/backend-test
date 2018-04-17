@@ -1,6 +1,5 @@
 package me.janario.statistics;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,8 +18,8 @@ public class StatisticsController {
 	private final Map<Integer, TransactionDto> transactions = new ConcurrentHashMap<>();
 
 	@PostMapping("/transactions")
-	public ResponseEntity<Object> createTrasaction(@RequestBody TransactionDto dto) {
-		if (dto.getTimestamp().isBefore(Instant.now().minusSeconds(60))) {
+	public ResponseEntity<TransactionResponseDto> createTrasaction(@RequestBody TransactionDto dto) {
+		if (dto.isOlderThan60Seconds()) {
 			return ResponseEntity.noContent().build();
 		}
 
@@ -29,7 +28,7 @@ public class StatisticsController {
 		return ResponseEntity.created(
 				ServletUriComponentsBuilder.fromCurrentContextPath()
 						.replacePath("/transaction/" + id).build().toUri())
-				.body(dto);
+				.body(new TransactionResponseDto(dto.getAmount(), dto.getTimestamp()));
 	}
 
 	@GetMapping("/statistics")
