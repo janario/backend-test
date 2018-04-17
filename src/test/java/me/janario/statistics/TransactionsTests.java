@@ -34,6 +34,18 @@ public class TransactionsTests {
 	}
 
 	@Test
+	public void oldValidTransaction() {
+		TransactionDto dto = new TransactionDto(BigDecimal.TEN, Instant.now().minusSeconds(30));
+
+		ResponseEntity<String> response = restTemplate.postForEntity("/transactions", dto, String.class);
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
+		TransactionDto created = restTemplate.getForObject(response.getHeaders().getLocation(), TransactionDto.class);
+		assertEquals(dto.getAmount(), created.getAmount());
+		assertEquals(dto.getTimestamp(), created.getTimestamp());
+	}
+
+	@Test
 	public void oldTransaction() {
 		TransactionDto dto = new TransactionDto(new BigDecimal("12.3"), Instant.now().minusSeconds(61));
 
@@ -43,7 +55,7 @@ public class TransactionsTests {
 
 	@Test
 	public void exampleTest() {
-		TransactionDto dto = new TransactionDto(new BigDecimal("12.3"), Instant.ofEpochMilli(1478192204000L));
+		TransactionDto dto = new TransactionDto(BigDecimal.ONE, Instant.ofEpochMilli(1478192204000L));
 
 		ResponseEntity<String> response = restTemplate.postForEntity("/transactions", dto, String.class);
 		assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
