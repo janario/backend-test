@@ -2,6 +2,8 @@ package me.janario.transaction;
 
 import java.time.Instant;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +24,7 @@ public class TransactionController {
 	private TransactionService transactionService;
 
 	@PostMapping("/transactions")
-	public ResponseEntity<TransactionResponseDto> createTrasaction(@RequestBody TransactionDto dto) {
+	public ResponseEntity<TransactionResponseDto> createTrasaction(@RequestBody @Valid TransactionDto dto) {
 		if (dto.getTimestamp().isBefore(Instant.now().minusSeconds(60))) {
 			return ResponseEntity.noContent().build();
 		}

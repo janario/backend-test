@@ -52,6 +52,26 @@ public class TransactionsTests {
 		assertNoContent(dto);
 	}
 
+	@Test
+	public void invalidDataAmount() {
+		assertInvalidData(new TransactionDto(null, Instant.now()));
+	}
+
+	@Test
+	public void invalidDataTimestamp() {
+		assertInvalidData(new TransactionDto(BigDecimal.TEN, null));
+	}
+
+	@Test
+	public void invalidData() {
+		assertInvalidData(new TransactionDto());
+	}
+
+	private void assertInvalidData(TransactionDto dto) {
+		ResponseEntity<TransactionResponseDto> response = restTemplate.postForEntity("/transactions", dto, TransactionResponseDto.class);
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	}
+
 	private ResponseEntity<TransactionResponseDto> createAssertResponse(TransactionDto dto) {
 		ResponseEntity<TransactionResponseDto> response = restTemplate.postForEntity("/transactions", dto, TransactionResponseDto.class);
 		assertEquals(HttpStatus.CREATED, response.getStatusCode());

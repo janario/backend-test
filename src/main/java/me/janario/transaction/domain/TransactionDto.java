@@ -3,8 +3,12 @@ package me.janario.transaction.domain;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import javax.validation.constraints.NotNull;
+
 public class TransactionDto {
+	@NotNull
 	private BigDecimal amount;
+	@NotNull
 	private Instant timestamp;
 
 	public TransactionDto() {
