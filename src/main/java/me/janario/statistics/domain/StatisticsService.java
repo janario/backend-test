@@ -5,8 +5,6 @@ import static me.janario.util.Utils.safeGet;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
@@ -29,14 +27,15 @@ public class StatisticsService {
 	private final SortedSet<TransactionResponseDto> transactions = new TreeSet<>(
 			Comparator.comparing(TransactionResponseDto::getAmount)
 					.thenComparing(TransactionResponseDto::getId));
-	private final Map<Long, TransactionResponseDto> transactionsById = new HashMap<>();
-
 
 	public void register(TransactionResponseDto dto) {
+		if (dto.isOlderThan60Seconds()) {
+			return;
+		}
+
 		doWithLock(lock, () -> {
 			sum = sum.add(dto.getAmount());
 			transactions.add(dto);
-			transactionsById.put(dto.getId(), dto);
 		});
 		taskScheduler.schedule(() -> this.unregister(dto), dto.expireOn());
 	}
@@ -45,11 +44,11 @@ public class StatisticsService {
 		doWithLock(lock, () -> {
 			sum = sum.subtract(dto.getAmount());
 			transactions.remove(dto);
-			transactionsById.remove(dto.getId());
 		});
 	}
 
 	public StatisticsDto getStatistics() {
+
 		BigDecimal min = safeGet(transactions::first);
 		BigDecimal max = safeGet(transactions::last);
 		BigDecimal sum = this.sum;
@@ -65,11 +64,6 @@ public class StatisticsService {
 
 	void cleanAll() {
 		sum = BigDecimal.ZERO;
-		transactionsById.clear();
 		transactions.clear();
-	}
-
-	public TransactionResponseDto findById(Long id) {
-		return transactionsById.get(id);
 	}
 }

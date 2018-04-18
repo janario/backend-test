@@ -1,7 +1,5 @@
 package me.janario.transaction;
 
-import java.time.Instant;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,16 +22,17 @@ public class TransactionController {
 	private TransactionService transactionService;
 
 	@PostMapping("/transactions")
-	public ResponseEntity<TransactionResponseDto> createTrasaction(@RequestBody @Valid TransactionDto dto) {
-		if (dto.getTimestamp().isBefore(Instant.now().minusSeconds(60))) {
-			return ResponseEntity.noContent().build();
-		}
-
+	public ResponseEntity<Void> createTrasaction(@RequestBody @Valid TransactionDto dto) {
 		TransactionResponseDto response = transactionService.register(dto);
-		return ResponseEntity.created(
-				ServletUriComponentsBuilder.fromCurrentContextPath()
-						.replacePath("/transaction/" + response.getId()).build().toUri())
-				.body(response);
+
+		if (response.isOlderThan60Seconds()) {
+			return ResponseEntity.noContent().build();
+		} else {
+			return ResponseEntity.created(
+					ServletUriComponentsBuilder.fromCurrentContextPath()
+							.replacePath("/transaction/" + response.getId()).build().toUri())
+					.build();
+		}
 	}
 
 	@GetMapping("/transaction/{id}")

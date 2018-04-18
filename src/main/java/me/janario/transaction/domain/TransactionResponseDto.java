@@ -35,4 +35,8 @@ public class TransactionResponseDto {
 	public Instant expireOn() {
 		return time.plusSeconds(60);
 	}
+
+	public boolean isOlderThan60Seconds() {
+		return getTime().isBefore(Instant.now().minusSeconds(60));
+	}
 }
