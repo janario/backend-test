@@ -1,15 +1,15 @@
-package me.janario.transaction.domain;
+package me.janario.statistics.domain;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TransactionHelper {
+public class StatisticsHelper {
 	@Autowired
-	private TransactionService transactionService;
+	private StatisticsService statisticsService;
 
 	public void cleanAll() {
 		//keep it package level to use only on test
-		transactionService.cleanAll();
+		statisticsService.cleanAll();
 	}
 }
