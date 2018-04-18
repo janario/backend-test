@@ -4,9 +4,8 @@ import static me.janario.util.Utils.doWithLock;
 import static me.janario.util.Utils.safeGet;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -21,41 +20,31 @@ public class StatisticsService {
 	@Autowired
 	private TaskScheduler taskScheduler;
 
-	private final Lock lock = new ReentrantLock();
 
-	private BigDecimal sum = BigDecimal.ZERO;
-	private final SortedSet<TransactionResponseDto> transactions = new TreeSet<>(
-			Comparator.comparing(TransactionResponseDto::getAmount)
-					.thenComparing(TransactionResponseDto::getId));
+	private final Lock lock = new ReentrantLock();
+	private CurrentStatistics currentStatistics = new CurrentStatistics();
 
 	public void register(TransactionResponseDto dto) {
 		if (dto.isOlderThan60Seconds()) {
 			return;
 		}
 
-		doWithLock(lock, () -> {
-			sum = sum.add(dto.getAmount());
-			transactions.add(dto);
-		});
+		doWithLock(lock, () -> currentStatistics = currentStatistics.addAmount(dto.getAmount()));
 		taskScheduler.schedule(() -> this.unregister(dto), dto.expireOn());
 	}
 
 	private void unregister(TransactionResponseDto dto) {
-		doWithLock(lock, () -> {
-			sum = sum.subtract(dto.getAmount());
-			transactions.remove(dto);
-		});
+		doWithLock(lock, () -> currentStatistics = currentStatistics.removeAmount(dto.getAmount()));
 	}
 
 	public StatisticsDto getStatistics() {
-
-		BigDecimal min = safeGet(transactions::first);
-		BigDecimal max = safeGet(transactions::last);
-		BigDecimal sum = this.sum;
-		long count = transactions.size();
+		CurrentStatistics currentStatistics = this.currentStatistics;
+		BigDecimal min = safeGet(currentStatistics.sortedAmout::firstKey);
+		BigDecimal max = safeGet(currentStatistics.sortedAmout::lastKey);
+		BigDecimal sum = currentStatistics.sum;
+		long count = currentStatistics.count;
 
 		BigDecimal avg = BigDecimal.ZERO;
-
 		if (count > 0) {
 			avg = sum.divide(BigDecimal.valueOf(count), 2, BigDecimal.ROUND_HALF_UP);
 		}
@@ -63,7 +52,41 @@ public class StatisticsService {
 	}
 
 	void cleanAll() {
-		sum = BigDecimal.ZERO;
-		transactions.clear();
+		currentStatistics = new CurrentStatistics();
+	}
+
+	private static class CurrentStatistics {
+		private final BigDecimal sum;
+		private final long count;
+		private final SortedMap<BigDecimal, Integer> sortedAmout;
+
+		public CurrentStatistics() {
+			this(BigDecimal.ZERO, 0, new TreeMap<>());
+		}
+
+		public CurrentStatistics(BigDecimal sum, long count, SortedMap<BigDecimal, Integer> sortedAmout) {
+			this.sum = sum;
+			this.count = count;
+			this.sortedAmout = new TreeMap<>(sortedAmout);
+		}
+
+		public CurrentStatistics addAmount(BigDecimal amount) {
+			CurrentStatistics statistics = new CurrentStatistics(
+					sum.add(amount), (count + 1),
+					sortedAmout);
+			statistics.sortedAmout.merge(amount, 1, (o, n) -> o + n);
+			return statistics;
+		}
+
+		public CurrentStatistics removeAmount(BigDecimal amount) {
+			CurrentStatistics statistics = new CurrentStatistics(
+					sum.subtract(amount), (count - 1),
+					sortedAmout);
+			statistics.sortedAmout.merge(amount, -1, (o, n) -> {
+				int i = o + n;
+				return (i == 0) ? null : i;
+			});
+			return statistics;
+		}
 	}
 }

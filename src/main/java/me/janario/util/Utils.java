@@ -1,11 +1,8 @@
 package me.janario.util;
 
-import java.math.BigDecimal;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Supplier;
-
-import me.janario.transaction.domain.TransactionResponseDto;
 
 public final class Utils {
 	private Utils() {
@@ -20,9 +17,9 @@ public final class Utils {
 		}
 	}
 
-	public static BigDecimal safeGet(Supplier<TransactionResponseDto> supplier) {
+	public static <R> R safeGet(Supplier<R> supplier) {
 		try {
-			return supplier.get().getAmount();
+			return supplier.get();
 		} catch (NoSuchElementException e) {
 			return null;
 		}

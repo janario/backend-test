@@ -70,7 +70,7 @@ public class StatisticsTests {
 	}
 
 	@Test
-	public void testExpiration() throws InterruptedException {
+	public void testExpiration() {
 		for (int i = 11; i < 16; i++) {
 			TransactionDto dto = new TransactionDto(BigDecimal.valueOf(i), Instant.now());
 			restTemplate.postForEntity("/transactions", dto, TransactionResponseDto.class);
@@ -89,9 +89,8 @@ public class StatisticsTests {
 		assertEquals(BigDecimal.valueOf(16), body.getMax());
 		assertEquals(BigDecimal.valueOf(10), body.getMin());
 		assertEquals(7, body.getCount());
+		waitExpiration(2_100);
 
-		//FIXME see other to wait for expiration
-		Thread.sleep(2_100);
 		response = restTemplate.getForEntity("/statistics", StatisticsDto.class);
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		body = response.getBody();
@@ -102,5 +101,46 @@ public class StatisticsTests {
 		assertEquals(BigDecimal.valueOf(15), body.getMax());
 		assertEquals(BigDecimal.valueOf(11), body.getMin());
 		assertEquals(5, body.getCount());
+	}
+
+	@Test
+	public void testExpirationSameValue() {
+		for (int i = 1; i < 8; i++) {
+			restTemplate.postForEntity("/transactions", new TransactionDto(BigDecimal.valueOf(7), Instant.now()), TransactionResponseDto.class);
+			restTemplate.postForEntity("/transactions", new TransactionDto(BigDecimal.valueOf(7), Instant.now().minusSeconds(58)), TransactionResponseDto.class);
+		}
+
+		ResponseEntity<StatisticsDto> response = restTemplate.getForEntity("/statistics", StatisticsDto.class);
+
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		StatisticsDto body = response.getBody();
+
+		// values: 7 x 7 | 7 x 7
+		assertEquals(BigDecimal.valueOf(98), body.getSum());
+		assertEquals(new BigDecimal("7.00"), body.getAvg());
+		assertEquals(BigDecimal.valueOf(7), body.getMax());
+		assertEquals(BigDecimal.valueOf(7), body.getMin());
+		assertEquals(14, body.getCount());
+
+		waitExpiration(2_100);
+		response = restTemplate.getForEntity("/statistics", StatisticsDto.class);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		body = response.getBody();
+
+		// values: 7 x 7
+		assertEquals(BigDecimal.valueOf(49), body.getSum());
+		assertEquals(new BigDecimal("7.00"), body.getAvg());
+		assertEquals(BigDecimal.valueOf(7), body.getMax());
+		assertEquals(BigDecimal.valueOf(7), body.getMin());
+		assertEquals(7, body.getCount());
+	}
+
+	private void waitExpiration(long millis) {
+		try {
+			//FIXME see other to wait for expiration
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
